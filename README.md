@@ -21,7 +21,6 @@ Ensure you have Node.js installed on your system. If not, download and install i
 2. **Install Dependencies:**  
    Navigate to the project directory and install the required NPM packages:  
    ```sh
-   cd crawler
    npm install
    ```  
 
