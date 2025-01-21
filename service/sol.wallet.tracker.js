@@ -7,9 +7,7 @@ const globalConfig = require("../global.config.json");
 
 const MIN_TOKEN_QUANTITY = 10;
 const MIN_USD_VALUE = 1000;
-const WALLET_BATCH_PROCESS = 5;
-const BATCH_SLEEP = 60000;
-const FULL_WALLET_SLEEP = 600000;
+const SLEEP = 10800000;
 
 
 (async () => {
@@ -18,18 +16,6 @@ const FULL_WALLET_SLEEP = 600000;
             let iterRpcCalls = 0, connection = null;
 
             for (let wallet in globalConfig.INFLUENCER_WALLETS) {
-
-                // Sleep between batches
-                if (iterRpcCalls % WALLET_BATCH_PROCESS === 0 && iterRpcCalls > 0) {
-                    console.log(`Processed ${WALLET_BATCH_PROCESS} wallets. Sleeping for ${BATCH_SLEEP} ms...`);
-                    await helperUtil.sleep(BATCH_SLEEP);
-                }
-
-                // Sleep after processing all wallets
-                if (iterRpcCalls > 0 && iterRpcCalls % Object.keys(globalConfig.INFLUENCER_WALLETS).length === 0) {
-                    console.log(`Processed all wallets. Sleeping for ${FULL_WALLET_SLEEP} ms...`);
-                    await helperUtil.sleep(FULL_WALLET_SLEEP);
-                }
 
                 try {
                     connection = new Connection(globalConfig.SOLANA_RPC[iterRpcCalls % globalConfig.SOLANA_RPC.length], 'confirmed');
@@ -73,6 +59,9 @@ const FULL_WALLET_SLEEP = 600000;
 
                 iterRpcCalls++;
             }
+
+            console.log(`Processed all wallets. Sleeping for ${SLEEP} ms...`);
+            await helperUtil.sleep(SLEEP);
         }
     } catch (e) {
         throw e
