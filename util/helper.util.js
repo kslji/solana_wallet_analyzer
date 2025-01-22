@@ -1,3 +1,6 @@
+const fs = require("fs");
+const path = require("path");
+
 async function sleep(duration) {
     try {
         if (duration === null) {
@@ -9,6 +12,22 @@ async function sleep(duration) {
     }
 }
 
+function getNewInvestment(storeData, wallet) {
+    try {
+        const filePath = path.join(__dirname, `../storage/${wallet}.json`);
+
+        let existingData = [];
+
+        if (fs.existsSync(filePath)) {
+            const data = fs.readFileSync(filePath, 'utf8');
+            existingData = JSON.parse(data);
+        }
+        return storeData.filter((item) => !existingData.includes(item));
+    } catch (err) {
+        console.error(`Error reading file: ${err.message}`);
+    }
+}
 module.exports = {
-    sleep: sleep
+    sleep: sleep,
+    getNewInvestment: getNewInvestment
 }

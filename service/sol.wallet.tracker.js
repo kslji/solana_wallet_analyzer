@@ -1,3 +1,5 @@
+const path = require("path");
+const fs = require("fs");
 const { Connection } = require("@solana/web3.js");
 const poolLib = require("../lib/solana/pool.lib");
 const priceLib = require("../lib/solana/price.lib");
@@ -29,15 +31,19 @@ const SLEEP = 10800000;
                 const fetchTokens = filterTokenBalance.map(token => token.tokenMintAddress);
                 const fetchTokenPrices = await priceLib.getTokensPrice(fetchTokens);
 
-                let tokenArr = [];
+                let tokenArr = [], storeData = [];
 
                 filterTokenBalance.forEach((item) => {
                     const tokenPrice = fetchTokenPrices.get(item.tokenMintAddress);
                     const tokenValue = item.balance * tokenPrice;
                     if (tokenValue > MIN_USD_VALUE) {
                         tokenArr[item.tokenMintAddress] = tokenValue;
+                        storeData.push(item.tokenMintAddress)
                     }
                 });
+                const newInvestments = await helperUtil.getNewInvestment(storeData, wallet);
+
+                fs.writeFileSync(path.join(__dirname, `../storage/${wallet}.json`), JSON.stringify(storeData), 'utf8');
 
                 const tokenDetails = Object.entries(tokenArr)
                     .map(
@@ -46,21 +52,42 @@ const SLEEP = 10800000;
                     )
                     .join('\n');
 
-                await telegramLib.sendMessage(
-                    wallet,
-                    `
-            🌟 **Influencer Wallet Update (${filterTokenBalance.length})** 🌟
-            -----------------------------------
-            🧑‍💼 **Influencer**: ${globalConfig.INFLUENCER_WALLETS[wallet]}
-            📊 **Holdings**:
-            ${tokenDetails}
+                if (newInvestments.length <= 0) {
+                    console.log(`${globalConfig.INFLUENCER_WALLETS[wallet]} no new token arrived !`)
+                } else {
+                    console.log(`${globalConfig.INFLUENCER_WALLETS[wallet]} new token arrived !`)
+                    await telegramLib.sendMessage(
+                        globalConfig.INFLUENCER_WALLETS[wallet],
+                        `
+                        🌟 **NEW TOKENS ARRIVED !!(Token Count :${newInvestments.length})** 🌟
+                        -----------------------------------
+                        🧑‍💼 **Influencer**: ${globalConfig.INFLUENCER_WALLETS[wallet]}
+                        ${storeData
+                            .map(
+                                (tokenAddress) =>
+                                    `\n - Token: ${tokenAddress} `
+                            )
+                            .join('\n')
+                        }
                 `
-                );
+                    )
+                }
+
+                await telegramLib.sendMessageWithChunks(
+                    globalConfig.INFLUENCER_WALLETS[wallet],
+                    `
+                    🌟 ** Influencer Wallet Update(${filterTokenBalance.length}) ** 🌟
+                -----------------------------------
+                    🧑‍💼 ** Influencer **: ${globalConfig.INFLUENCER_WALLETS[wallet]}
+                    📊 ** Holdings **:
+                    ${tokenDetails}
+                `
+                )
 
                 iterRpcCalls++;
             }
 
-            console.log(`Processed all wallets. Sleeping for ${SLEEP} ms...`);
+            console.log(`Processed all wallets.Sleeping for ${SLEEP} ms...`);
             await helperUtil.sleep(SLEEP);
         }
     } catch (e) {
