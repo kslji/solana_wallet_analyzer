@@ -1,6 +1,6 @@
 # Solana Wallet Analyzer ✨🚀📈
 
-This bot fetches all wallet tokens with a minimum value of $1000 (configurable in the code). Once all wallet prices are fetched and a message is sent to the Telegram channel, the bot will sleep for 5 hours (also configurable). After 5 hours, it resumes tracking wallet funds provided in the global JSON file.
+This bot tracks Solana wallet token holdings and updates on any new purchases or sales. It fetches all wallet tokens with a minimum value of $1000 (configurable) and sends updates to a specified Telegram channel. The bot uses a caching mechanism with the filesystem to track tokens, and sends alerts if new tokens are encountered.
 
 ## 🚀 Getting Started  
 
